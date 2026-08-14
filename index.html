@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Jarvis AI Assistant</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#00ffff">
+
+  <style>
+    body{
+      margin:0;
+      font-family:Arial,sans-serif;
+      background:#0f172a;
+      color:white;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:100vh;
+    }
+
+    .box{
+      width:90%;
+      max-width:400px;
+      padding:25px;
+      text-align:center;
+      border-radius:20px;
+      background:#111827;
+      border:1px solid cyan;
+      box-shadow:0 0 20px rgba(0,255,255,.3);
+    }
+
+    h1{
+      color:cyan;
+    }
+
+    button{
+      padding:15px 25px;
+      font-size:18px;
+      border:none;
+      border-radius:30px;
+      background:cyan;
+      color:black;
+      cursor:pointer;
+      margin-top:20px;
+    }
+
+    #heard,#reply{
+      margin-top:20px;
+      padding:12px;
+      border-radius:10px;
+      background:#1f2937;
+      min-height:40px;
+      text-align:left;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="box">
+    <h1>⚡ JARVIS</h1>
+
+    <button id="micBtn">🎤 Speak</button>
+
+    <div id="heard">You said: ...</div>
+    <div id="reply">Jarvis: Waiting...</div>
+  </div>
+
+  <script>
+    const heard = document.getElementById("heard");
+    const reply = document.getElementById("reply");
+    const micBtn = document.getElementById("micBtn");
+
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    function speak(text){
+      const speech = new SpeechSynthesisUtterance(text);
+      speech.lang = "hi-IN";
+      speechSynthesis.speak(speech);
+    }
+
+    function searchWeb(query){
+      speak("Accessing global network");
+
+      const url =
+        "https://www.google.com/search?q=" +
+        encodeURIComponent(query);
+
+      window.open(url, "_blank");
+
+      return "Searching the web for " + query;
+    }
+
+    function getReply(message){
+
+      message = message.toLowerCase();
+
+      if(message.includes("hello") || message.includes("hi")){
+        return "Haan Mann, main Jarvis hoon.";
+      }
+
+      if(message.includes("time")){
+        return "Abhi samay hai " +
+          new Date().toLocaleTimeString("hi-IN");
+      }
+
+      if(message.includes("good morning")){
+        return "Good Morning Mann!";
+      }
+
+      if(message.includes("good night")){
+        return "Good night Mann!";
+      }
+
+      // Calculator
+      let calc = message
+        .replace(/plus/g,"+")
+        .replace(/minus/g,"-")
+        .replace(/times|into/g,"*")
+        .replace(/divide by/g,"/");
+
+      if(/^[0-9+\-*/ ().]+$/.test(calc)){
+        try{
+          return "Answer is " + eval(calc);
+        }catch{
+          return "Calculation error.";
+        }
+      }
+
+      // Personal Commands
+      if(message.includes("mera schedule")){
+        return "Subah 5:30 baje uthna, 7 baje tak college pahunchna, shaam ko NATA class aur uske baad gym karke raat ko 11 baje sona.";
+      }
+
+      if(message.includes("motivate me")){
+        return "Mann, consistency hi tumhara real superpower hai.";
+      }
+
+      if(message.includes("study")){
+        return "Aaj Physics aur Chemistry ke important numericals revise karo.";
+      }
+
+      if(message.includes("wake up jarvis")){
+        return "Jarvis online ho chooka hai. Mission ke liye ready hoon Mann!";
+      }
+
+      if(message.includes("open youtube")){
+        window.open("https://www.youtube.com", "_blank");
+        return "YouTube opening.";
+      }
+
+      if(message.includes("open google")){
+        window.open("https://www.google.com", "_blank");
+        return "Google opening.";
+      }
+
+      if(message.includes("play music")){
+        window.open("https://music.youtube.com", "_blank");
+        return "Playing music.";
+      }
+
+      if(message.includes("weather")){
+        window.open(
+          "https://www.google.com/search?q=weather+latur+maharashtra",
+          "_blank"
+        );
+        return "latur weather opening.";
+      }
+
+      // Search Engine
+      if(
+        message.startsWith("search ") ||
+        message.includes("what is") ||
+        message.includes("who is") ||
+        message.includes("how to")
+      ){
+        let query = message.replace("search ", "");
+        return searchWeb(query);
+      }
+
+      return "Sorry Mann, mujhe samajh nahi aaya.";
+    }
+
+    if(!SpeechRecognition){
+      reply.innerText =
+        "Jarvis: Speech recognition is not supported in this browser.";
+    } else {
+
+      const recognition = new SpeechRecognition();
+
+      recognition.lang = "en-IN";
+      recognition.interimResults = false;
+
+      micBtn.addEventListener("click", () => {
+
+        reply.innerText = "Jarvis: Listening...";
+
+        recognition.start();
+      });
+
+      recognition.onresult = (event) => {
+
+        const text = event.results[0][0].transcript;
+
+        heard.innerText = "You said: " + text;
+
+        const answer = getReply(text);
+
+        reply.innerText = "Jarvis: " + answer;
+
+        speak(answer);
+      };
+
+      recognition.onerror = (event) => {
+
+        reply.innerText =
+          "Jarvis: Microphone error - " + event.error;
+      };
+    }
+
+    // Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
+
+</body>
+</html>
